@@ -1,0 +1,386 @@
+<!DOCTYPE HTML>
+
+<html lang="en" dir='ltr'>
+
+<head>
+  <meta charset="utf-8"> <!-- Sempre per primo -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memory</title>
+
+  <style>
+    body, html {
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(90deg, black, grey);
+    }
+
+    .selectGame {
+      background-image: linear-gradient(90deg, grey, lightgreen);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 45%;
+      position: relative;
+      border-radius: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 40%;
+    }
+
+    .selectGame span {
+      cursor: pointer;
+      padding: 5px;
+      font-style: italic;
+      border: 1px solid black;
+      background-color: lightgrey;
+    }
+    .selectGame span:hover {
+      cursor: pointer;
+      font-style: italic;
+      color: white;
+      border: 1px solid black;
+    }
+
+    .infoDiv {
+      position: absolute;
+      left: 50px;
+      top: 15%;
+      color: white;
+      width:15%; 
+      text-align: center;    
+      font-size: x-large; 
+    }
+  
+    main {
+      display: none;
+      justify-content: center;
+      align-content: center;
+      grid-template-columns: 150px 150px 150px 150px 150px 150px;
+      grid-template-rows: 150px 150px 150px 150px 150px 150px;
+      width: 100%;
+      height: 100%;
+    }
+  
+    .boardElement {
+      background-color: white;
+      border: 2px solid black;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 1px;
+    }
+  
+    .boardElement:hover, .boardElement.hovered {
+      background-color: rgb(210, 210, 210);
+      cursor: pointer;
+    }
+
+  
+    .boardElementClicked {
+      background-color: rgb(210, 210, 210);
+      border: 2px solid black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+    }
+  
+    .boardElementChild {
+      visibility: hidden;
+      background-color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: xx-large;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .boardElementChildImg {
+      visibility: hidden;
+      border-radius: 10px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .gameResult {
+      position: absolute;
+      top: 35%;
+      left: 50%;      
+      animation: result 0.5s ease 0s forwards;
+      border-radius: 20px;
+      z-index: 2;
+      background-image: linear-gradient(to bottom, black, grey);
+      color: white;
+      text-align: center;
+    }
+
+    @keyframes result {
+      from {
+        width: 0%;
+        height: 0%;
+        transform: translateX(0%);
+      }
+      to {
+        width: 50%;
+        height: 15%;
+        transform: translateX(-49%);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main></main>
+
+</body>
+
+
+<script>
+
+let boardSquares;
+let scoreElement;
+let score = 1000;
+let gameNumbers = [];
+let firstNumbers = [];
+let secondNumbers = [];
+let inGameSquares = 36;
+let body = document.querySelector('body');
+let main = document.querySelector('main');
+
+function selectGameType() {
+  let element = document.createElement('div');
+  let elementChild = document.createElement('h2');
+  elementChild.innerHTML = `
+  Scegli il tipo di tessere: 
+  <span onclick="createBoard('number', 'p')">Numeri</span>
+  <span onclick="createBoard('img', 'img')">Immagini</span>
+  `
+  element.classList.add('selectGame');
+  element.appendChild(elementChild);
+  body.appendChild(element);
+}
+
+selectGameType();
+
+function createBoard(type, childTag) {
+  body.removeChild(document.querySelector('.selectGame'));
+  let i = 0;  
+  while (i < 36) {
+  let element = document.createElement('div');
+  let elementChild = document.createElement(childTag);
+  element.classList.add('boardElement');
+  type === 'number'? elementChild.classList.add('boardElementChild') : elementChild.classList.add('boardElementChildImg');
+  element.addEventListener('click', showSquare);
+  element.appendChild(elementChild);
+  main.appendChild(element);
+  i++;
+  }
+  boardSquares = document.querySelectorAll('.boardElement');
+  let infoDiv = document.createElement('div');
+  infoDiv.classList.add('infoDiv');
+  infoDiv.innerHTML = `
+     <h1>Memory</h1> 
+     <br>
+     <p>Punteggio: <span id="score"></span></p>
+     <br>
+     <br>
+     <br>
+     <button type="button" onclick="restartGame()">Riavvia il gioco</button>
+     `
+  body.appendChild(infoDiv);
+  scoreElement = document.querySelector('#score');
+  scoreElement.innerHTML = score; 
+  createNumbers(type);
+};
+
+let imgCouple = [
+  ['img/sole150x150.png', 'img/luna150x150.png'],
+  ['img/mare150x150.png', 'img/montagna150x150.png'],
+  ['img/cane150x150.png', 'img/gatto150x150.png'],
+  ['img/tavolo150x150.png', 'img/sedia150x150.png'],
+  ['img/lepre150x150.png', 'img/tartaruga150x150.png'],
+  ['img/uomo150x150.png', 'img/donna150x150.png'],
+  ['img/mani150x150.png', 'img/piedi150x150.png'],
+  ['img/porta150x150.png', 'img/finestra150x150.png'],
+  ['img/albero150x150.png', 'img/foglia150x150.png'],
+  ['img/violino150x150.png', 'img/piano150x150.png'],
+  ['img/bottiglia150x150.png', 'img/bicchiere150x150.png'],
+  ['img/moneta150x150.png', 'img/banconota150x150.png'],
+  ['img/racchetta150x150.png', 'img/pallina150x150.png'],
+  ['img/candela150x150.png', 'img/lampadina150x150.png'],
+  ['img/moto150x150.png', 'img/casco150x150.png'],
+  ['img/coltello150x150.png', 'img/forchetta150x150.png'],
+  ['img/cacca150x150.png', 'img/wc150x150.png'],
+  ['img/aereo150x150.png', 'img/paracadute150x150.png']
+];
+
+function createNumbers(type) {
+  for (let i = 0; i < 18; i ++) {
+    if (type === 'number') {
+      firstNumbers[i] = i;
+      secondNumbers[i] = i;
+    } else {
+      firstNumbers[i] = [i, imgCouple[i][0]];
+      secondNumbers[i] = [i, imgCouple[i][1]];
+    }
+  
+  }
+  for (let i = firstNumbers.length -1; i > 0; i--) {
+  let j = Math.floor(Math.random() * (i+1));
+  let h = Math.floor(Math.random() * (i+1));
+  let k = firstNumbers[i];
+  firstNumbers[i] = firstNumbers[j];
+  firstNumbers[j] = k;
+  let y = secondNumbers[i];
+  secondNumbers[i] = secondNumbers[h];
+  secondNumbers[h] = y;
+  }
+  for (let i = 0; i < 36; i += 2) { 
+    if (i === 0) {
+    gameNumbers[i] = firstNumbers[i];
+    gameNumbers[i + 1] = secondNumbers[i];
+    } else {
+    gameNumbers[i] = firstNumbers[i/2];
+    gameNumbers[i + 1] = secondNumbers[i/2];
+    }
+  }
+  console.log(firstNumbers);
+  console.log(secondNumbers);
+  console.log(gameNumbers);
+  prepareGame(type);
+}
+
+function prepareGame(type) {
+  if (type === 'number') {
+    for (let i = 0; i < 36; i++) {
+    boardSquares[i].children[0].textContent = gameNumbers[i];
+    boardSquares[i].children[0].dataset.squareValue = gameNumbers[i];
+    boardSquares[i].children[0].dataset.gameType = 'number';
+    }
+  } else {
+    for (let i = 0; i < 36; i++) {
+    boardSquares[i].children[0].src = gameNumbers[i][1];
+    boardSquares[i].children[0].dataset.squareValue = gameNumbers[i][0];
+    boardSquares[i].children[0].dataset.gameType = 'img';
+    }
+  }
+  main.style.display = 'grid';
+} 
+
+let totSelSquares = 0;
+let selSquares = [];
+
+function showSquare(event) {
+  totSelSquares += 1;
+  let selectedSquare = event.target;
+  if (totSelSquares < 3) {
+  selectedSquare.removeEventListener('click', showSquare);
+  selectedSquare.classList.remove('boardElement');
+  selectedSquare.classList.add('boardElementClicked');
+  //selectedSquare.classList.remove('hovered');
+  selectedSquare.children[0].style.visibility = 'visible';
+  }
+  if (totSelSquares === 1) { 
+  selSquares.push(selectedSquare);
+  } else if (totSelSquares === 2) {
+    console.log(selectedSquare.children[0].textContent + '&' + selSquares[0].children[0].textContent);
+    if (selectedSquare.children[0].dataset.squareValue === selSquares[0].children[0].dataset.squareValue) {
+      console.log('gameType', selectedSquare.children[0].dataset.gameType)
+      if (selectedSquare.children[0].dataset.gameType === 'number') {
+        selectedSquare.style.backgroundColor = 'green';
+        selSquares[0].style.backgroundColor = 'green';
+      } else {
+        selectedSquare.style.border = '4px solid lightgreen';
+        selSquares[0].style.border = '4px solid lightgreen';
+      }      
+      setTimeout(function() {
+        selectedSquare.style.visibility = 'hidden';
+        selSquares[0].style.visibility = 'hidden';
+        selectedSquare.children[0].style.visibility = 'hidden';
+        selSquares[0].children[0].style.visibility = 'hidden';
+        inGameSquares -= 2;
+        totSelSquares = 0;
+        selSquares = [];
+        score += 300;
+        scoreElement.innerHTML = score;
+          if (inGameSquares === 0) {
+          gameResult('win');
+          }
+      }, 1000);
+    } else {
+      console.log('gameType', selectedSquare.children[0].dataset.gameType);
+    if (selectedSquare.children[0].dataset.gameType === 'number') {
+      selectedSquare.style.backgroundColor = 'red';
+      selSquares[0].style.backgroundColor = 'red';
+    } else {
+      selectedSquare.style.border = '4px solid red';
+      selSquares[0].style.border = '4px solid red';
+    }    
+      setTimeout(function() {
+        selectedSquare.style.backgroundColor = 'white';
+        selSquares[0].style.backgroundColor = 'white';
+        selectedSquare.style.border = '2px solid black';
+        selSquares[0].style.border = '2px solid black';
+        selectedSquare.style.removeProperty('background-color');
+        selSquares[0].style.removeProperty('background-color');
+        selectedSquare.addEventListener('click', showSquare);
+        selectedSquare.classList.remove('boardElementClicked');
+        selectedSquare.classList.add('boardElement');
+        selectedSquare.children[0].style.visibility = 'hidden';
+        selSquares[0].addEventListener('click', showSquare);
+        selSquares[0].classList.remove('boardElementClicked');
+        selSquares[0].classList.add('boardElement');
+        //selSquares[0].classList.add('hovered');
+        selSquares[0].children[0].style.visibility = 'hidden';      
+        totSelSquares = 0;
+        selSquares = [];
+        score -= 50;
+        scoreElement.innerHTML = score;
+        if (score === 0) {
+          gameResult('lose');
+        }
+      }, 1000);
+    }
+  }
+}
+
+function gameResult(result) {
+  let gameResultDiv = document.createElement('div');
+  gameResultDiv.classList.add('gameResult');
+  if (result === 'win') {
+    gameResultDiv.innerHTML = `
+       <h2>Hai vinto!</h2>
+       <br>
+       <p>Il tuo punteggio è: <span>${score}</span></p>
+       <br>
+       <button type="button" onclick="restartGame()">Gioca di nuovo</button>
+       <br>
+       `
+  } else {
+    gameResultDiv.innerHTML = `
+       <h2>Hai perso!</h2>
+       <br>
+       <button type="button" onclick="restartGame()">Gioca di nuovo</button>
+       <br>
+       `
+  }
+  body.appendChild(gameResultDiv);
+}
+
+function restartGame() {
+  body.removeChild(document.querySelector('.infoDiv'));
+  main.innerHTML = '';
+  main.style.display = 'none';
+  if (document.querySelector('.gameResult')) {
+    body.removeChild(document.querySelector('.gameResult'));
+  }
+  selectGameType();
+}
+
+</script>
+
+</html>
